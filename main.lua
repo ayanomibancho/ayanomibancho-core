@@ -26,6 +26,63 @@ local handleAuth = require('./handlers/auth')
 local session = require('./session')
 local handleBancho = require('./handlers/bancho')
 
+-- 2.5. Rate Limiting State and Helpers
+local rateLimits = {}
+local gcCounter = 0
+
+local function getHeader(req, name)
+  if not req.headers then return nil end
+  return req.headers[name:lower()] or req.headers[name]
+end
+
+local function getClientIp(req)
+  local xff = getHeader(req, 'x-forwarded-for')
+  if xff and xff ~= "" then
+    local ip = string.match(xff, "^%s*([^,%s]+)")
+    if ip then return ip end
+  end
+
+  local xri = getHeader(req, 'x-real-ip')
+  if xri and xri ~= "" then
+    return xri
+  end
+
+  if req.socket and req.socket.address then
+    local ok, addr = pcall(req.socket.address, req.socket)
+    if ok and addr and addr.ip then
+      return addr.ip
+    end
+  end
+
+  return "127.0.0.1"
+end
+
+local function shouldRateLimit(method, path)
+  if not method or not path then return false end
+  -- 1. Exclude static assets
+  if string.match(path, "^/public/") then
+    return false
+  end
+  -- 2. Exclude user avatar endpoints (GET /{user_id})
+  if method == "GET" and string.match(path, "^/%d+$") then
+    return false
+  end
+  -- 3. Exclude in-game Bancho connections (POST /)
+  if method == "POST" and path == "/" then
+    return false
+  end
+  -- 4. Exclude in-game endpoints (^/web/)
+  if string.match(path, "^/web/") then
+    return false
+  end
+  -- 5. Exclude beatmap downloads (^/d/)
+  if string.match(path, "^/d/") then
+    return false
+  end
+  
+  return true
+end
+
 -- 3. Register HTTP Routes
 -- GET: Home Page
 router:get('^/$', function(req, res)
@@ -283,6 +340,45 @@ local function handleRequest(req, res)
   local parsedUrl = url.parse(req.url, true)
   local path = parsedUrl.pathname
   local method = req.method
+
+  -- Rate Limiting: 30 requests per minute
+  if shouldRateLimit(method, path) then
+    local ip = getClientIp(req)
+    local now = os.time()
+    local limit = rateLimits[ip]
+
+    if limit then
+      if now - limit.startTime < 60 then
+        if limit.count >= 30 then
+          print(string.format('[Rate Limit] Blocked IP %s requesting %s %s', ip, method, path))
+          res:writeHead(429, {
+            ['Content-Type'] = 'text/plain',
+            ['Retry-After'] = '60'
+          })
+          res:finish('429 Too Many Requests')
+          return
+        else
+          limit.count = limit.count + 1
+        end
+      else
+        limit.count = 1
+        limit.startTime = now
+      end
+    else
+      rateLimits[ip] = { count = 1, startTime = now }
+    end
+
+    -- Inline Garbage Collection
+    gcCounter = gcCounter + 1
+    if gcCounter % 100 == 0 then
+      local expiry = now - 60
+      for k, v in pairs(rateLimits) do
+        if v.startTime < expiry then
+          rateLimits[k] = nil
+        end
+      end
+    end
+  end
 
   -- Check legacy php or query-based redirections first
   if pagemappings.checkRedirect(req, res, path, parsedUrl.query) then
