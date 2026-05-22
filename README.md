@@ -1,23 +1,10 @@
-# 🌟 AyanomiBancho - Custom osu! Private Server
+# AyanomiBancho - Custom osu! Private Server
 
-Welcome to **AyanomiBancho**, a high-performance, lightweight custom web backend and custom in-game Bancho protocol server for osu! private servers. 
-
-Designed specifically for **Linux VPS** deployment (fully compatible with Windows local development), AyanomiBancho features a premium, state-of-the-art **Hatsune Miku Neon Dark-Mode** design system with a responsive glassmorphic UI.
+Welcome to **AyanomiBancho**, a high-performance, lightweight custom web backend and custom in-game Bancho protocol server for  low-cost osu! private servers. 
 
 ---
 
-## ✨ Features
-
-- **⚡ Lightweight Template Engine**: Built-in HTML renderer in Lua with automatic hot-reloading for development.
-- **🎨 Hatsune Miku UI Theme**: Stunning cyberpunk glassmorphism style sheet with glowing cyan/pink neon indicators and responsive flex layout.
-- **🎮 Custom Bancho Handler**: Non-blocking in-game connection processing, user presence, login handling, and real-time statistics updates.
-- **📦 Dual-Database Support**: Out-of-the-box SQLite3 configuration, with fallback to an in-memory mock database for isolated testing.
-- **☁️ rclone Cloud Synchronization**: Automated background scripts to backup, sync, or dynamically mount your game data (avatars, replays, beatmaps) to Google Drive.
-- **🔒 Production Ready**: Configured for Nginx reverse proxy management and Let's Encrypt SSL.
-
----
-
-## 📂 Project Directory Structure
+## Project Directory Structure
 
 ```
 AyanomiBancho/
@@ -36,10 +23,10 @@ AyanomiBancho/
 
 ---
 
-## 🔧 Prerequisites & Setup
+## Prerequisites & Setup
 
 ### 1. Install Luvit
-AyanomiBancho runs on **Luvit** (Node.js engine rewritten for Lua). Install it using the following commands:
+AyanomiBancho runs on **Luvit**. Install it using the following commands:
 
 **On Linux (Ubuntu/Debian):**
 ```bash
@@ -80,31 +67,23 @@ Enable the site and run Certbot to request SSL Certificates:
 sudo ln -s /etc/nginx/sites-available/osu-server /etc/nginx/sites-enabled/
 sudo certbot --nginx -d o.ayanomi.io.vn -d c.o.ayanomi.io.vn -d ce.o.ayanomi.io.vn -d c4.o.ayanomi.io.vn -d osu.o.ayanomi.io.vn -d a.o.ayanomi.io.vn
 ```
-*Note: Once Let's Encrypt confirms the DNS challenge, you can enable Cloudflare proxying (Orange Cloud) as long as your SSL settings are set to **Full** or **Full (Strict)**.*
+*Note: Once Let's Encrypt confirms, you can enable Cloudflare proxying (Orange Cloud) as long as your SSL settings are set to **Full** or **Full (Strict)**.*
 
 ### 3. Setup rclone Data Sync (Optional)
-Configure a Google Drive connection to keep avatars, replays, and maps backed up:
-```bash
-./rclone_setup.sh
-```
+I recommend you should create a Union (include a lot of gdrive or some stuff u have)
 
 ---
 
-## 🚀 Running the Server
+## Running the Server
 
 ### Start the server locally:
 ```bash
 # On Linux:
+chmod +x ./start.sh
 ./start.sh
 
 # On Windows:
 start.bat
-```
-
-### Start the server on VPS (with Cloud Backup):
-```bash
-# On Linux VPS:
-./start_cloud.sh
 ```
 
 ### Mount Cloud Storage directly:
@@ -116,7 +95,7 @@ If you want to read/write files directly from/to Google Drive without copying fi
 
 ---
 
-## 🛠️ In-Game Configuration
+## In-Game Configuration
 
 To connect the game client, run your osu! client executable with the `-devserver` argument directing to your domain:
 ```cmd
@@ -125,5 +104,9 @@ osu!.exe -devserver o.ayanomi.io.vn
 
 ---
 
-## 📜 License
-This project is licensed under the MIT License.
+## License
+This project is licensed under the AGPL-3.0 license.
+
+## Thank for 
+- [Ripple](https://github.com/osuripple) and [Akatsuki](https://github.com/osuAkatsuki) because their code and ideas helped create this project.
+- [Google Gemini](https://gemini.google.com/) for help me design UI.
