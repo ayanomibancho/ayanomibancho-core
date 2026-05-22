@@ -44,6 +44,7 @@ function handlers.team(req, res)
 
   -- Merge database stats with the static list of members
   local function processGroup(group)
+    if not group then return end
     for _, member in ipairs(group) do
       local dbUser = userMap[member.username:lower()]
       if dbUser then
@@ -67,6 +68,7 @@ function handlers.team(req, res)
 
   -- Helper to render lists into HTML in Lua, satisfying clean component separation
   local function renderUserList(members)
+    if not members then return "" end
     local items = {}
     for _, m in ipairs(members) do
       local socialHtml = ""
