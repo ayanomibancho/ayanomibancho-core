@@ -1,0 +1,189 @@
+<!-- layout: layout -->
+
+<div class="leaderboard-section container animate-fade-in">
+  <div class="leaderboard-header">
+    <div class="leaderboard-info">
+      <h1 class="leaderboard-title">Global Leaderboard</h1>
+      <p class="leaderboard-subtitle">The top osu! {{mode}} players {{relax_text}} on AyanomiBancho</p>
+    </div>
+    <div class="leaderboard-icon-wrapper">
+      <div class="crown-icon animate-pulse">👑</div>
+    </div>
+  </div>
+
+  <!-- Mode selectors -->
+  <div class="mode-selectors">
+    <a href="/leaderboard?m=0&relax=0" class="mode-selector">osu! Standard</a>
+    <a href="/leaderboard?m=0&relax=1" class="mode-selector">osu! Standard (Relax)</a>
+    <a href="/leaderboard?m=1&relax=0" class="mode-selector">Taiko</a>
+    <a href="/leaderboard?m=2&relax=0" class="mode-selector">Catch the Beat</a>
+    <a href="/leaderboard?m=3&relax=0" class="mode-selector">osu!mania</a>
+  </div>
+
+  <!-- Leaderboard Table Container -->
+  <div class="table-container glass">
+    <table class="miku-table">
+      <thead>
+        <tr>
+          <th class="col-rank" style="text-align: center;">Rank</th>
+          <th class="col-user">User</th>
+          <th class="col-pp">Ranked Score</th>
+          <th class="col-accuracy">Accuracy</th>
+          <th class="col-playcount">Play Count</th>
+          <th class="col-level">Level</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{leaderboard_rows}}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+.leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.leaderboard-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.leaderboard-subtitle {
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+.leaderboard-icon-wrapper {
+  font-size: 40px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-shadow: var(--shadow-main);
+}
+
+.crown-icon {
+  user-select: none;
+}
+
+/* Rank column padding styling */
+.col-rank { width: 10%; }
+.col-user { width: 35%; }
+.col-pp { width: 18%; }
+.col-accuracy { width: 15%; }
+.col-playcount { width: 12%; }
+.col-level { width: 10%; }
+
+.rank-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.rank-1 {
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.15);
+}
+
+.rank-2 {
+  background: rgba(192, 192, 192, 0.15);
+  color: #c0c0c0;
+  border: 1px solid rgba(192, 192, 192, 0.3);
+  box-shadow: 0 0 10px rgba(192, 192, 192, 0.15);
+}
+
+.rank-3 {
+  background: rgba(205, 127, 50, 0.15);
+  color: #cd7f32;
+  border: 1px solid rgba(205, 127, 50, 0.3);
+  box-shadow: 0 0 10px rgba(205, 127, 50, 0.15);
+}
+
+.rank-other {
+  color: var(--text-secondary);
+}
+
+.table-user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.table-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+.table-user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.table-username {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: var(--transition-smooth);
+}
+
+.table-username:hover {
+  color: var(--miku-teal);
+  text-shadow: 0 0 8px var(--miku-teal-glow);
+}
+
+.table-country-code {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.level-indicator {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.level-number {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+</style>
+
+<script>
+  // Add active class based on URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const mode = urlParams.get('m') || '0';
+  const relax = urlParams.get('relax') || '0';
+  
+  const selectors = document.querySelectorAll('.mode-selector');
+  selectors.forEach(sel => {
+    const href = new URL(sel.href, window.location.origin);
+    const mParam = href.searchParams.get('m') || '0';
+    const rParam = href.searchParams.get('relax') || '0';
+    if (mParam === mode && rParam === relax) {
+      sel.classList.add('active');
+    }
+  });
+</script>

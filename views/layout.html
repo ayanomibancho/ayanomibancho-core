@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AyanomiBancho - {{ title }}</title>
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body class="miku-theme">
+  <!-- Dynamic background glow elements -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <!-- Main Navigation -->
+  <nav class="miku-nav">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <span class="logo-accent">Ayanomi</span><span class="logo-sub">Bancho</span>
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/leaderboard" class="nav-link">Leaderboard</a>
+        <a href="/about" class="nav-link">About</a>
+        <a href="/team" class="nav-link">Team</a>
+        <a href="/irc" class="nav-link">IRC Token</a>
+        {{user_nav}}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Content Wrapper -->
+  <main class="miku-content">
+    {{body}}
+  </main>
+
+  <!-- Footer -->
+  <footer class="miku-footer">
+    <div class="footer-container">
+      <p>&copy; 2026 AyanomiBancho. Built with high-performance <a href="https://luvit.io" target="_blank" class="footer-link">Luvit</a> and <span class="miku-text">Lua Templates</span>.</p>
+      <p class="footer-tagline">Making osu! server backends elegant again.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!-- layout: layout -->
+
+<div class="auth-container container animate-fade-in">
+  <div class="auth-card glass">
+    <div class="auth-header">
+      <div class="auth-icon text-glow-teal">🔑</div>
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Sign in to your AyanomiBancho account to connect and track scores.</p>
+    </div>
+
+    <!-- Error Message Alert Box -->
+    <div class="error-wrapper" style="display: {{error_display}};">
+      <div class="error-card">
+        <div class="error-title">⚠️ ERROR</div>
+        <p class="error-text">{{error}}</p>
+      </div>
+    </div>
+
+    <form class="auth-form" action="/login" method="POST">
+      <div class="form-group">
+        <label for="username">Username or Email</label>
+        <input type="text" id="username" class="form-control" name="username" placeholder="Enter your username or email" required autocomplete="username">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" class="form-control" name="password" placeholder="Enter your password" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="btn btn-auth">Sign In</button>
+    </form>
+
+    <div class="auth-footer-links">
+      <p>Don't have an account? <a href="/register" class="auth-link text-glow-teal">Register now</a></p>
+    </div>
+  </div>
+</div>
+
+<style>
+.auth-container {
+  max-width: 500px !important;
+  margin: 0 auto;
+}
+
+.auth-card {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.auth-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-icon {
+  font-size: 40px;
+}
+
+.auth-title {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.auth-subtitle {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Error message styling */
+.error-card {
+  background: rgba(255, 0, 127, 0.05);
+  border: 1px solid rgba(255, 0, 127, 0.2);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.05);
+}
+
+.error-title {
+  color: var(--miku-pink);
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.error-text {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+/* Form Styling */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.btn-auth {
+  background: rgba(57, 197, 187, 0.1);
+  border: 1px solid var(--miku-teal);
+  color: var(--miku-teal);
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  margin-top: 8px;
+}
+
+.btn-auth:hover {
+  background: var(--miku-teal);
+  color: #0c0d13;
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px var(--miku-teal-glow);
+}
+
+.auth-footer-links {
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+.auth-link {
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+</style>

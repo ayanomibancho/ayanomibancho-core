@@ -1,0 +1,11 @@
+{
+	local_certs
+}
+
+c.ayanomibancho.local, ce.ayanomibancho.local, c4.ayanomibancho.local, osu.ayanomibancho.local, a.ayanomibancho.local, ayanomibancho.local {
+	reverse_proxy 127.0.0.1:13380
+
+	request_body {
+		max_size 20MB
+	}
+}

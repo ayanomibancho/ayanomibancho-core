@@ -1,0 +1,132 @@
+<!-- layout: layout -->
+
+<div class="about-hero container animate-fade-in">
+  <div class="about-card glass card-hover">
+    <h1 class="about-title">About <span class="text-glow-teal">AyanomiBancho</span></h1>
+    <p class="about-tagline">A premium, high-performance osu! private server backend built using Luvit.</p>
+  </div>
+</div>
+
+<div class="features-section container animate-fade-in delay-1">
+  <div class="section-title-wrapper">
+    <h2 class="section-title">Server Features</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="features-grid">
+    <!-- Feature 1 -->
+    <div class="feature-card glass card-hover">
+      <div class="feature-icon text-glow-teal">🏆</div>
+      <h3 class="feature-name">Real-Time Leaderboards</h3>
+      <p class="feature-desc">PP calculations and ranks computed asynchronously for all game modes, including support for Relax and Autopilot playstyles.</p>
+    </div>
+
+    <!-- Feature 2 -->
+    <div class="feature-card glass card-hover">
+      <div class="feature-icon text-glow-pink">⚡</div>
+      <h3 class="feature-name">High Performance</h3>
+      <p class="feature-desc">Driven by LuaJIT's compilation and Luvit's event-driven, non-blocking I/O loop. Response times are kept under 5 milliseconds.</p>
+    </div>
+
+    <!-- Feature 3 -->
+    <div class="feature-card glass card-hover">
+      <div class="feature-icon text-glow-teal">💬</div>
+      <h3 class="feature-name">IRC Chat Support</h3>
+      <p class="feature-desc">Connect with other players using standard IRC clients or chat with FokaBot, our interactive companion bot.</p>
+    </div>
+
+    <!-- Feature 4 -->
+    <div class="feature-card glass card-hover">
+      <div class="feature-icon text-glow-pink">🎮</div>
+      <h3 class="feature-name">Spectate & Multiplayer</h3>
+      <p class="feature-desc">Fully supports real-time score streaming, spectating, and custom lobby multiplayer matches directly in the game client.</p>
+    </div>
+  </div>
+</div>
+
+<div class="about-footer container animate-fade-in delay-2">
+  <div class="glass stats-summary">
+    <h3>Join the next generation of private servers today!</h3>
+    <p>AyanomiBancho is built for speed, stability, and aesthetics. Setup takes less than 2 minutes.</p>
+    <a href="/" class="btn-connect">How to Connect</a>
+  </div>
+</div>
+
+<style>
+.about-hero {
+  margin-bottom: 40px;
+}
+
+.about-card {
+  padding: 50px 30px;
+  text-align: center;
+}
+
+.about-title {
+  font-size: 40px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.about-tagline {
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 50px;
+}
+
+.feature-card {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.feature-icon {
+  font-size: 36px;
+}
+
+.feature-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.feature-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.stats-summary {
+  padding: 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-connect {
+  background: var(--miku-teal);
+  color: #000;
+  padding: 10px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: var(--transition-smooth);
+  box-shadow: 0 0 10px var(--miku-teal-glow);
+}
+
+.btn-connect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px var(--miku-teal-glow);
+}
+</style>

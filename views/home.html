@@ -1,0 +1,130 @@
+<!-- layout: layout -->
+
+<div class="home-hero container animate-fade-in">
+  <div class="hero-card glass card-hover">
+    <div class="hero-content">
+      <h1 class="hero-title">Welcome to <span class="text-glow-teal">AyanomiBancho</span></h1>
+      <p class="hero-description">
+        A high-performance osu! private server web backend written entirely in 
+        <strong class="text-glow-pink">Luvit</strong> and compiled with LuaJIT. 
+        Enjoy seamless leaderboard rankings, player profiles, and in-game support.
+      </p>
+      
+      <!-- Call to Actions -->
+      <div class="hero-actions">
+        <a href="/leaderboard" class="btn btn-primary animate-pulse">View Leaderboard</a>
+        <a href="/about" class="btn btn-secondary">Learn More</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="server-info-section container animate-fade-in delay-1">
+  <div class="section-title-wrapper">
+    <h2 class="section-title">How to Connect</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="connect-grid">
+    <!-- Step 1 -->
+    <div class="connect-card glass">
+      <div class="connect-num">01</div>
+      <h3 class="connect-title">Install osu! Client</h3>
+      <p class="connect-text">Download the official osu! game client on your PC and make sure it works.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="connect-card glass">
+      <div class="connect-num">02</div>
+      <h3 class="connect-title">Launch with -devserver</h3>
+      <p class="connect-text">Create a shortcut of your osu! client, open its Properties, and add <code class="text-glow-teal">-devserver o.ayanomi.io.vn</code> to the end of the Target field, or run via terminal:</p>
+      <pre class="code-block">osu!.exe -devserver o.ayanomi.io.vn</pre>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="connect-card glass">
+      <div class="connect-num">03</div>
+      <h3 class="connect-title">Enjoy & Play!</h3>
+      <p class="connect-text">Launch osu! using your new connection, register a new account, or log in with your credentials.</p>
+    </div>
+  </div>
+</div>
+
+<style>
+/* CSS styles specific to home layout */
+.home-hero {
+  margin-bottom: 48px;
+}
+
+.hero-card {
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.hero-title {
+  font-size: 48px;
+  font-weight: 800;
+  margin-bottom: 18px;
+  letter-spacing: -1px;
+}
+
+.hero-description {
+  font-size: 18px;
+  color: var(--text-secondary);
+  max-width: 700px;
+  margin: 0 auto 32px auto;
+  line-height: 1.6;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.connect-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.connect-card {
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.connect-num {
+  font-size: 72px;
+  font-weight: 800;
+  color: rgba(57, 197, 187, 0.08);
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  user-select: none;
+}
+
+.connect-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.connect-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.code-block {
+  background: rgba(0,0,0,0.3);
+  padding: 10px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 12px;
+  margin-top: 10px;
+  border: 1px solid rgba(255,255,255,0.05);
+  text-align: left;
+  overflow-x: auto;
+}
+</style>

@@ -1,0 +1,40 @@
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+
+# Windows / Linux executables & libraries
+*.exe
+*.dll
+*.so
+*.dylib
+luvit
+luvi
+lit
+caddy
+sqlite3_deps/
+
+# Game Data & User uploads (Exclude default avatar)
+data/*
+!data/avatars
+data/avatars/*
+!data/avatars/default
+data/avatars/default/*
+!data/avatars/default/avatar.jpg
+
+# User screenshots
+public/screenshots/*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# System files
+.DS_Store
+Thumbs.db
+
+docs/*
