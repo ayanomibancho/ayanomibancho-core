@@ -38,3 +38,6 @@ __pycache__/
 Thumbs.db
 
 docs/*
+
+# Local configurations
+config.local.lua

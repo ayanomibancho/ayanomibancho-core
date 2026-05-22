@@ -9,6 +9,10 @@ echo ""
 echo "[*] Mounting Google Drive to $MOUNT_POINT"
 echo "    Remote: $REMOTE"
 echo ""
+echo "TIP: Copy config.local.example.lua to config.local.lua and set"
+echo "     paths.data = \"$MOUNT_POINT\""
+echo "     to make the server read/write directly from Google Drive."
+echo ""
 
 # Create mount point if it doesn't exist
 sudo mkdir -p "$MOUNT_POINT"

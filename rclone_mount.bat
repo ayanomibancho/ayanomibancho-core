@@ -14,7 +14,8 @@ echo.
 echo NOTE: This window must stay open while mounted.
 echo       Press Ctrl+C to unmount.
 echo.
-echo TIP: Set config.lua paths.data = "R:/ayanomibancho-data"
+echo TIP: Copy config.local.example.lua to config.local.lua and set
+echo      paths.data = "R:/ayanomibancho-data"
 echo      to make the server read/write directly from Google Drive.
 echo.
 

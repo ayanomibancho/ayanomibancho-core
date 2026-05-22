@@ -33,4 +33,24 @@ local config = {
   }
 }
 
+-- Load local config override if it exists (e.g. config.local.lua)
+local fs = require('fs')
+if fs.existsSync("config.local.lua") then
+  local success, local_config = pcall(require, "./config.local")
+  if success and type(local_config) == "table" then
+    local function merge(t1, t2)
+      for k, v in pairs(t2) do
+        if type(v) == "table" and type(t1[k]) == "table" then
+          merge(t1[k], v)
+        else
+          t1[k] = v
+        end
+      end
+    end
+    merge(config, local_config)
+  else
+    print("[Config Warning] Failed to load config.local.lua: ", local_config)
+  end
+end
+
 return config
