@@ -14,10 +14,10 @@ db.driver = config.database.driver or "sqlite"
 -- Mock Player Database (Used as fallback or when driver is "mock")
 local mockData = {
   users = {
-    { id = 2, username = "Ayanomi", email = "ayanomi@example.com", password_hash = "5e883767f37069203078949697cd2002c6918a2d805217300669c79c759d622d", password_md5 = "5f4dcc3b5aa765d61d8327deb882cf99", pp = 12450, rank = 1, country = "VN", accuracy = 99.23, playcount = 85210, ranked_score = 9854120300, level = 101 },
-    { id = 3, username = "Miku", email = "miku@example.com", password_hash = "5e883767f37069203078949697cd2002c6918a2d805217300669c79c759d622d", password_md5 = "5f4dcc3b5aa765d61d8327deb882cf99", pp = 11800, rank = 2, country = "JP", accuracy = 98.95, playcount = 65420, ranked_score = 7542100800, level = 98 },
-    { id = 4, username = "Cookiezi", email = "cookiezi@example.com", password_hash = "5e883767f37069203078949697cd2002c6918a2d805217300669c79c759d622d", password_md5 = "5f4dcc3b5aa765d61d8327deb882cf99", pp = 11500, rank = 3, country = "KR", accuracy = 99.82, playcount = 120450, ranked_score = 15201400200, level = 102 },
-    { id = 1, username = "peppy", email = "peppy@example.com", password_hash = "5e883767f37069203078949697cd2002c6918a2d805217300669c79c759d622d", password_md5 = "5f4dcc3b5aa765d61d8327deb882cf99", pp = 1200, rank = 4, country = "AU", accuracy = 92.50, playcount = 1540, ranked_score = 54021000, level = 25 },
+    { id = 2, username = "Ayanomi", email = "ayanomi@example.com", password_hash = "5e883767f37069203078949697cd2002c6918a2d805217300669c79c759d622d", password_md5 = "5f4dcc3b5aa765d61d8327deb882cf99", pp = 12450, rank = 1, country = "VN", accuracy = 99.23, playcount = 85210, ranked_score = 9854120300, level = 101, two_factor_enabled = 0, two_factor_secret = nil },
+    { id = 3, username = "Miku", email = "miku@example.com", password_hash = "5e883767f37069203078949697cd2002c6918a2d805217300669c79c759d622d", password_md5 = "5f4dcc3b5aa765d61d8327deb882cf99", pp = 11800, rank = 2, country = "JP", accuracy = 98.95, playcount = 65420, ranked_score = 7542100800, level = 98, two_factor_enabled = 0, two_factor_secret = nil },
+    { id = 4, username = "Cookiezi", email = "cookiezi@example.com", password_hash = "5e883767f37069203078949697cd2002c6918a2d805217300669c79c759d622d", password_md5 = "5f4dcc3b5aa765d61d8327deb882cf99", pp = 11500, rank = 3, country = "KR", accuracy = 99.82, playcount = 120450, ranked_score = 15201400200, level = 102, two_factor_enabled = 0, two_factor_secret = nil },
+    { id = 1, username = "peppy", email = "peppy@example.com", password_hash = "5e883767f37069203078949697cd2002c6918a2d805217300669c79c759d622d", password_md5 = "5f4dcc3b5aa765d61d8327deb882cf99", pp = 1200, rank = 4, country = "AU", accuracy = 92.50, playcount = 1540, ranked_score = 54021000, level = 25, two_factor_enabled = 0, two_factor_secret = nil },
   },
   scores = {
     { id = 101, username = "Cookiezi", beatmap_md5 = "c8f08430a2feb0204d70f1a92e2f3d61", score = 12500000, max_combo = 1520, count50 = 0, count100 = 2, count300 = 1024, countmiss = 0, countkatu = 1, countgeki = 200, perfect = 1, mods = 8, pp = 720 },
@@ -219,9 +219,15 @@ function db.initSqliteSchema()
       password_md5 TEXT DEFAULT '',
       country TEXT DEFAULT 'VN',
       latest_activity INTEGER DEFAULT 0,
-      privileges INTEGER DEFAULT 1
+      privileges INTEGER DEFAULT 1,
+      two_factor_enabled INTEGER DEFAULT 0,
+      two_factor_secret TEXT DEFAULT NULL
     );
   ]]
+
+  -- Migration: add 2FA columns to existing users table
+  pcall(function() db.sqliteConn:exec("ALTER TABLE users ADD COLUMN two_factor_enabled INTEGER DEFAULT 0;") end)
+  pcall(function() db.sqliteConn:exec("ALTER TABLE users ADD COLUMN two_factor_secret TEXT DEFAULT NULL;") end)
 
   db.sqliteConn:exec[[
     CREATE TABLE IF NOT EXISTS users_stats (

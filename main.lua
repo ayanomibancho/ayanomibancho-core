@@ -32,7 +32,13 @@ local gcCounter = 0
 
 local function getHeader(req, name)
   if not req.headers then return nil end
-  return req.headers[name:lower()] or req.headers[name]
+  local lowerName = name:lower()
+  for _, pair in ipairs(req.headers) do
+    if type(pair) == "table" and pair[1] and pair[1]:lower() == lowerName then
+      return pair[2]
+    end
+  end
+  return req.headers[lowerName] or req.headers[name]
 end
 
 local function getClientIp(req)
@@ -148,6 +154,13 @@ router:get('^/logout$', handleAuth.logout)
 -- GET & POST: Account Settings / Avatar Edit routes
 router:get('^/home/account/edit$', handleAuth.editPage)
 router:post('^/home/account/edit$', handleAuth.editSubmit)
+
+-- GET & POST: Two-Factor Authentication routes
+router:get('^/login/2fa$', handleAuth.login2faPage)
+router:post('^/login/2fa$', handleAuth.login2faSubmit)
+router:get('^/home/account/2fa/setup$', handleAuth.setup2faPage)
+router:post('^/home/account/2fa/enable$', handleAuth.enable2faSubmit)
+router:post('^/home/account/2fa/disable$', handleAuth.disable2faSubmit)
 
 -- Legacy /settings redirects
 router:get('^/settings/avatar$', function(req, res)

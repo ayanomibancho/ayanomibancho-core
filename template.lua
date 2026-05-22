@@ -96,7 +96,9 @@ function template.render(templateName, data)
     local renderedBody = renderString(contentBody, data)
 
     -- Inject rendered body into the layout's {{body}} placeholder
-    local fullRenderedPage = string.gsub(layoutContent, "{{%s*body%s*}}", renderedBody)
+    -- Escape '%' in replacement to prevent gsub interpreting URL-encoded chars as captures
+    local safeBody = renderedBody:gsub("%%", "%%%%")
+    local fullRenderedPage = string.gsub(layoutContent, "{{%s*body%s*}}", safeBody)
 
     -- Finally, render all variables inside the full layout context
     return renderString(fullRenderedPage, data)

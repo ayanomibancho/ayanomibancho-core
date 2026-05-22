@@ -15,7 +15,15 @@ local gcCounter = 0
 
 local function getHeader(req, name)
   if not req.headers then return nil end
-  return req.headers[name:lower()] or req.headers[name]
+  local lowerName = name:lower()
+  -- Try Luvit array-of-pairs format first
+  for _, pair in ipairs(req.headers) do
+    if type(pair) == "table" and pair[1] and pair[1]:lower() == lowerName then
+      return pair[2]
+    end
+  end
+  -- Fallback: dictionary-style access
+  return req.headers[lowerName] or req.headers[name]
 end
 
 local function getClientIp(req)
@@ -58,6 +66,122 @@ local function hashPassword(password)
   return openssl.digest.digest('sha256', password)
 end
 
+-- Base32 decode/encode for TOTP
+local base32_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+local base32_map = {}
+for i = 1, #base32_chars do
+  base32_map[base32_chars:sub(i, i)] = i - 1
+end
+
+local function decodeBase32(str)
+  str = str:upper():gsub("[=%s]", "")
+  local bits = 0
+  local val = 0
+  local bytes = {}
+  for i = 1, #str do
+    local c = str:sub(i, i)
+    local digit = base32_map[c]
+    if not digit then return nil end
+    val = (val * 32) + digit
+    bits = bits + 5
+    while bits >= 8 do
+      bits = bits - 8
+      local byte = math.floor(val / (2 ^ bits))
+      table.insert(bytes, string.char(byte % 256))
+      val = val % (2 ^ bits)
+    end
+  end
+  return table.concat(bytes)
+end
+
+local function generateSecret()
+  local rawBytes = openssl.random(10)
+  local secret = {}
+  for i = 1, 16 do
+    local idx = (rawBytes:byte(((i-1) % 10) + 1) % 32) + 1
+    table.insert(secret, base32_chars:sub(idx, idx))
+  end
+  return table.concat(secret)
+end
+
+local function getTOTP(secret, time)
+  local bit = require('bit')
+  local secret_bytes = decodeBase32(secret)
+  if not secret_bytes then return nil end
+  local T = math.floor(time / 30)
+  local msg = ""
+  for i = 7, 0, -1 do
+    local byte = math.floor(T / (256 ^ i)) % 256
+    msg = msg .. string.char(byte)
+  end
+  local hmac_val = openssl.hmac.digest('sha1', msg, secret_bytes, true)
+  local offset = bit.band(hmac_val:byte(20), 0x0f) + 1
+  local b1, b2, b3, b4 = hmac_val:byte(offset, offset + 3)
+  local num = bit.bor(
+    bit.lshift(bit.band(b1, 0x7f), 24),
+    bit.lshift(b2, 16),
+    bit.lshift(b3, 8),
+    b4
+  )
+  local code = num % 1000000
+  return string.format("%06d", code)
+end
+
+local function verifyTOTP(secret, code)
+  local now = os.time()
+  for _, offset in ipairs({0, -30, 30}) do
+    local expected = getTOTP(secret, now + offset)
+    if expected and expected == code then
+      return true
+    end
+  end
+  return false
+end
+
+-- Cloudflare Turnstile verification
+local function verifyTurnstile(token, remoteIp)
+  if not config.turnstile or not config.turnstile.secret_key or config.turnstile.secret_key == "" then
+    return true -- Skip if not configured
+  end
+  if not token or token == "" then
+    return false
+  end
+  local ok, coroHttp = pcall(require, 'coro-http')
+  if not ok then return true end -- Skip if coro-http not available
+  local body = "secret=" .. config.turnstile.secret_key .. "&response=" .. token
+  if remoteIp and remoteIp ~= "" then
+    body = body .. "&remoteip=" .. remoteIp
+  end
+  local success, res, data = pcall(coroHttp.request, "POST", "https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    {"Content-Type", "application/x-www-form-urlencoded"},
+    {"Content-Length", tostring(#body)}
+  }, body)
+  if not success then
+    print("[Auth] Turnstile verification request failed: " .. tostring(res))
+    return true -- Fail open if request errors
+  end
+  if data and string.find(data, '"success"%s*:%s*true') then
+    return true
+  end
+  return false
+end
+
+-- Helper: get Turnstile template variables for login/register pages
+local function turnstileVars()
+  local siteKey = config.turnstile and config.turnstile.site_key or ""
+  return {
+    turnstile_site_key = siteKey,
+    turnstile_display = (siteKey ~= "") and "block" or "none"
+  }
+end
+
+-- Helper: merge turnstile vars into a data context table
+local function withTurnstile(ctx)
+  local tv = turnstileVars()
+  for k, v in pairs(tv) do ctx[k] = v end
+  return ctx
+end
+
 -- GET /register
 function auth.registerPage(req, res)
   local currentUser = session.get(req)
@@ -72,6 +196,7 @@ function auth.registerPage(req, res)
     error = "",
     error_display = "none"
   }
+  withTurnstile(dataContext)
   local success, renderedHtml = pcall(template.render, "register", dataContext)
   if success then
     res:writeHead(200, {
@@ -101,7 +226,13 @@ function auth.registerSubmit(req, res)
   local password = params.password or ""
   local passwordConfirm = params.password_confirm or ""
 
+  local turnstileToken = params['cf-turnstile-response'] or ""
+
   local errStr = ""
+
+  if not verifyTurnstile(turnstileToken, getClientIp(req)) then
+    errStr = "Human verification failed. Please try again."
+  end
 
   -- Basic input validation
   if username == "" or email == "" or password == "" or passwordConfirm == "" then
@@ -138,6 +269,7 @@ function auth.registerSubmit(req, res)
       error = errStr,
       error_display = "block"
     }
+    withTurnstile(dataContext)
     local success, renderedHtml = pcall(template.render, "register", dataContext)
     res:writeHead(200, {
       ['Content-Type'] = 'text/html; charset=utf-8',
@@ -183,6 +315,7 @@ function auth.loginPage(req, res)
     error = "",
     error_display = "none"
   }
+  withTurnstile(dataContext)
   local success, renderedHtml = pcall(template.render, "login", dataContext)
   if success then
     res:writeHead(200, {
@@ -230,6 +363,7 @@ function auth.loginSubmit(req, res)
         error = string.format("Too many failed login attempts. Please wait %d minute(s) before trying again.", minutes),
         error_display = "block"
       }
+      withTurnstile(dataContext)
       local success, renderedHtml = pcall(template.render, "login", dataContext)
       res:writeHead(200, {
         ['Content-Type'] = 'text/html; charset=utf-8',
@@ -245,8 +379,26 @@ function auth.loginSubmit(req, res)
 
   local body = readBody(req)
   local params = querystring.parse(body)
+  local turnstileToken = params['cf-turnstile-response'] or ""
   local username = params.username or ""
   local password = params.password or ""
+
+  -- Verify Turnstile
+  if not verifyTurnstile(turnstileToken, ip) then
+    local dataContext = {
+      title = "Login",
+      error = "Human verification failed. Please try again.",
+      error_display = "block"
+    }
+    withTurnstile(dataContext)
+    local success, renderedHtml = pcall(template.render, "login", dataContext)
+    res:writeHead(200, {
+      ['Content-Type'] = 'text/html; charset=utf-8',
+      ['Content-Length'] = success and tostring(#renderedHtml) or 24
+    })
+    res:finish(success and renderedHtml or "Internal rendering error")
+    return
+  end
 
   local user = nil
   if username ~= "" and password ~= "" then
@@ -261,13 +413,25 @@ function auth.loginSubmit(req, res)
   end
 
   if user then
-    loginFailures[ip] = nil
-    local sid = session.create(user)
-    res:writeHead(302, {
-      ['Location'] = '/',
-      ['Set-Cookie'] = "sid=" .. sid .. "; Path=/; HttpOnly"
-    })
-    res:finish()
+    if user.two_factor_enabled and user.two_factor_enabled == 1 then
+      -- 2FA is enabled: create a pending session and redirect to 2FA page
+      user.pending_2fa = true
+      local sid = session.create(user)
+      res:writeHead(302, {
+        ['Location'] = '/login/2fa',
+        ['Set-Cookie'] = "sid=" .. sid .. "; Path=/; HttpOnly"
+      })
+      res:finish()
+    else
+      -- Normal login (no 2FA)
+      loginFailures[ip] = nil
+      local sid = session.create(user)
+      res:writeHead(302, {
+        ['Location'] = '/',
+        ['Set-Cookie'] = "sid=" .. sid .. "; Path=/; HttpOnly"
+      })
+      res:finish()
+    end
   else
     failRecord = loginFailures[ip]
     if not failRecord then
@@ -284,6 +448,7 @@ function auth.loginSubmit(req, res)
         error = "Too many failed login attempts. Please try again in 5 minutes.",
         error_display = "block"
       }
+      withTurnstile(dataContext)
       local success, renderedHtml = pcall(template.render, "login", dataContext)
       res:writeHead(200, {
         ['Content-Type'] = 'text/html; charset=utf-8',
@@ -296,6 +461,7 @@ function auth.loginSubmit(req, res)
         error = "Invalid username/email or password.",
         error_display = "block"
       }
+      withTurnstile(dataContext)
       local success, renderedHtml = pcall(template.render, "login", dataContext)
       res:writeHead(200, {
         ['Content-Type'] = 'text/html; charset=utf-8',
@@ -308,7 +474,7 @@ end
 
 -- GET /logout
 function auth.logout(req, res)
-  local _, sid = session.get(req)
+  local _, sid = session.get(req, true)
   if sid then
     session.destroy(sid)
   end
@@ -332,7 +498,7 @@ function auth.registerClient(req, res)
   local boundary = nil
 
   -- Try to get boundary from Content-Type header
-  local contentType = req.headers['content-type'] or ""
+  local contentType = getHeader(req, 'content-type') or ""
   boundary = contentType:match('boundary="?([^";%s]+)"?')
 
   if not boundary then
@@ -490,17 +656,42 @@ function auth.editPage(req, res)
   local urlParser = require('url')
   local parsedUrl = urlParser.parse(req.url, true)
   local queryParams = parsedUrl.query or {}
-  local successMsg = queryParams.success == "1"
+  local successParam = queryParams.success or ""
+
+  -- Query fresh 2FA status
+  local userInfo = db.query("SELECT two_factor_enabled FROM users WHERE id = ?", currentUser.id)
+  local twofa_enabled = userInfo and userInfo[1] and userInfo[1].two_factor_enabled == 1
+
+  -- Determine alert message based on success param
+  local alertDisplay = "none"
+  local alertClass = "alert-success"
+  local alertTitle = "SUCCESS"
+  local alertMessage = ""
+  if successParam == "1" then
+    alertDisplay = "block"
+    alertMessage = "Your avatar has been updated successfully!"
+  elseif successParam == "2fa_enabled" then
+    alertDisplay = "block"
+    alertMessage = "Two-factor authentication has been enabled successfully!"
+  elseif successParam == "2fa_disabled" then
+    alertDisplay = "block"
+    alertMessage = "Two-factor authentication has been disabled."
+  end
 
   local dataContext = {
     title = "Account Settings",
     username = currentUser.username,
     user_id = currentUser.id,
     t = os.time(),
-    alert_display = successMsg and "block" or "none",
-    alert_class = "alert-success",
-    alert_title = "SUCCESS",
-    alert_message = "Your avatar has been updated successfully!"
+    alert_display = alertDisplay,
+    alert_class = alertClass,
+    alert_title = alertTitle,
+    alert_message = alertMessage,
+    twofa_enabled = twofa_enabled,
+    twofa_status = twofa_enabled and "Enabled" or "Disabled",
+    twofa_badge_class = twofa_enabled and "enabled" or "disabled",
+    twofa_btn_display_enable = twofa_enabled and "none" or "block",
+    twofa_btn_display_disable = twofa_enabled and "block" or "none"
   }
   
   local success, renderedHtml = pcall(template.render, "edit_account", dataContext)
@@ -527,7 +718,7 @@ function auth.editSubmit(req, res)
   end
 
   local body = readBody(req)
-  local contentType = req.headers['content-type'] or ""
+  local contentType = getHeader(req, 'content-type') or ""
   local boundary = contentType:match('boundary="?([^";%s]+)"?')
   
   local fileData, err, ext = parseAvatarUpload(body, boundary)
@@ -611,6 +802,199 @@ function auth.editSubmit(req, res)
 
     res:writeHead(302, { ['Location'] = '/home/account/edit?success=1' })
     res:finish()
+  end
+end
+
+-- GET /login/2fa
+function auth.login2faPage(req, res)
+  local user = session.get(req, true)
+  if not user or not user.pending_2fa then
+    res:writeHead(302, { ['Location'] = '/login' })
+    res:finish()
+    return
+  end
+
+  local dataContext = {
+    title = "Two-Factor Verification",
+    error = "",
+    error_display = "none"
+  }
+  local success, renderedHtml = pcall(template.render, "login_2fa", dataContext)
+  if success then
+    res:writeHead(200, {
+      ['Content-Type'] = 'text/html; charset=utf-8',
+      ['Content-Length'] = tostring(#renderedHtml)
+    })
+    res:finish(renderedHtml)
+  else
+    res:writeHead(500, { ['Content-Type'] = 'text/plain' })
+    res:finish('500 Internal Server Error')
+  end
+end
+
+-- POST /login/2fa
+function auth.login2faSubmit(req, res)
+  local user = session.get(req, true)
+  if not user or not user.pending_2fa then
+    res:writeHead(302, { ['Location'] = '/login' })
+    res:finish()
+    return
+  end
+
+  local body = readBody(req)
+  local params = querystring.parse(body)
+  local totp_code = params.totp_code or ""
+
+  if verifyTOTP(user.two_factor_secret, totp_code) then
+    user.pending_2fa = nil
+    res:writeHead(302, { ['Location'] = '/' })
+    res:finish()
+  else
+    local dataContext = {
+      title = "Two-Factor Verification",
+      error = "Invalid verification code. Please try again.",
+      error_display = "block"
+    }
+    local success, renderedHtml = pcall(template.render, "login_2fa", dataContext)
+    res:writeHead(200, {
+      ['Content-Type'] = 'text/html; charset=utf-8',
+      ['Content-Length'] = success and tostring(#renderedHtml) or 24
+    })
+    res:finish(success and renderedHtml or "Internal rendering error")
+  end
+end
+
+-- GET /home/account/2fa/setup
+function auth.setup2faPage(req, res)
+  local currentUser = session.get(req)
+  if not currentUser then
+    res:writeHead(302, { ['Location'] = '/login' })
+    res:finish()
+    return
+  end
+
+  local secret = generateSecret()
+  local secret_display = secret:sub(1, 4) .. " " .. secret:sub(5, 8) .. " " .. secret:sub(9, 12) .. " " .. secret:sub(13, 16)
+  local otpauth_uri = "otpauth://totp/AyanomiBancho:" .. currentUser.username .. "?secret=" .. secret .. "&issuer=AyanomiBancho"
+
+  -- URL-encode the otpauth URI for the QR code API
+  local encoded_uri = otpauth_uri:gsub("([^%w%-%.%_%~])", function(c)
+    return string.format("%%%02X", string.byte(c))
+  end)
+  local qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" .. encoded_uri
+
+  local dataContext = {
+    title = "Setup Two-Factor Authentication",
+    qr_url = qr_url,
+    secret_display = secret_display,
+    secret_raw = secret,
+    error = "",
+    error_display = "none"
+  }
+  local success, renderedHtml = pcall(template.render, "setup_2fa", dataContext)
+  if success then
+    res:writeHead(200, {
+      ['Content-Type'] = 'text/html; charset=utf-8',
+      ['Content-Length'] = tostring(#renderedHtml)
+    })
+    res:finish(renderedHtml)
+  else
+    print("[Auth] Setup 2FA Render Error: ", renderedHtml)
+    res:writeHead(500, { ['Content-Type'] = 'text/plain' })
+    res:finish('500 Internal Server Error')
+  end
+end
+
+-- POST /home/account/2fa/enable
+function auth.enable2faSubmit(req, res)
+  local currentUser = session.get(req)
+  if not currentUser then
+    res:writeHead(302, { ['Location'] = '/login' })
+    res:finish()
+    return
+  end
+
+  local body = readBody(req)
+  local params = querystring.parse(body)
+  local totp_code = params.totp_code or ""
+  local secret = params.secret or ""
+
+  if verifyTOTP(secret, totp_code) then
+    db.query("UPDATE users SET two_factor_enabled = 1, two_factor_secret = ? WHERE id = ?", secret, currentUser.id)
+    res:writeHead(302, { ['Location'] = '/home/account/edit?success=2fa_enabled' })
+    res:finish()
+  else
+    -- Re-render setup page with error
+    local secret_display = secret:sub(1, 4) .. " " .. secret:sub(5, 8) .. " " .. secret:sub(9, 12) .. " " .. secret:sub(13, 16)
+    local otpauth_uri = "otpauth://totp/AyanomiBancho:" .. currentUser.username .. "?secret=" .. secret .. "&issuer=AyanomiBancho"
+    local encoded_uri = otpauth_uri:gsub("([^%w%-%.%_%~])", function(c)
+      return string.format("%%%02X", string.byte(c))
+    end)
+    local qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" .. encoded_uri
+
+    local dataContext = {
+      title = "Setup Two-Factor Authentication",
+      qr_url = qr_url,
+      secret_display = secret_display,
+      secret_raw = secret,
+      error = "Invalid verification code. Please try again.",
+      error_display = "block"
+    }
+    local success, renderedHtml = pcall(template.render, "setup_2fa", dataContext)
+    res:writeHead(200, {
+      ['Content-Type'] = 'text/html; charset=utf-8',
+      ['Content-Length'] = success and tostring(#renderedHtml) or 24
+    })
+    res:finish(success and renderedHtml or "Internal rendering error")
+  end
+end
+
+-- POST /home/account/2fa/disable
+function auth.disable2faSubmit(req, res)
+  local currentUser = session.get(req)
+  if not currentUser then
+    res:writeHead(302, { ['Location'] = '/login' })
+    res:finish()
+    return
+  end
+
+  local body = readBody(req)
+  local params = querystring.parse(body)
+  local totp_code = params.totp_code or ""
+
+  local userRow = db.query("SELECT two_factor_secret FROM users WHERE id = ?", currentUser.id)
+  local secret = userRow and userRow[1] and userRow[1].two_factor_secret or ""
+
+  if verifyTOTP(secret, totp_code) then
+    db.query("UPDATE users SET two_factor_enabled = 0, two_factor_secret = NULL WHERE id = ?", currentUser.id)
+    res:writeHead(302, { ['Location'] = '/home/account/edit?success=2fa_disabled' })
+    res:finish()
+  else
+    -- Re-render edit_account with error
+    local userInfo = db.query("SELECT two_factor_enabled FROM users WHERE id = ?", currentUser.id)
+    local twofa_enabled = userInfo and userInfo[1] and userInfo[1].two_factor_enabled == 1
+
+    local dataContext = {
+      title = "Account Settings",
+      username = currentUser.username,
+      user_id = currentUser.id,
+      t = os.time(),
+      alert_display = "block",
+      alert_class = "alert-danger",
+      alert_title = "ERROR",
+      alert_message = "Invalid verification code. Could not disable 2FA.",
+      twofa_enabled = twofa_enabled,
+      twofa_status = twofa_enabled and "Enabled" or "Disabled",
+      twofa_badge_class = twofa_enabled and "enabled" or "disabled",
+      twofa_btn_display_enable = twofa_enabled and "none" or "block",
+      twofa_btn_display_disable = twofa_enabled and "block" or "none"
+    }
+    local success, renderedHtml = pcall(template.render, "edit_account", dataContext)
+    res:writeHead(200, {
+      ['Content-Type'] = 'text/html; charset=utf-8',
+      ['Content-Length'] = success and tostring(#renderedHtml) or 24
+    })
+    res:finish(success and renderedHtml or "Internal rendering error")
   end
 end
 

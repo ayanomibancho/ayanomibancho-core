@@ -1953,3 +1953,127 @@ h1, h2, h3, h4, h5, h6, .logo-accent, .stat-value, .hero-title, .section-title {
     padding: 0 20px;
   }
 }
+
+/* ========================================
+   Two-Factor Authentication Styles
+   ======================================== */
+
+.twofa-section {
+  margin-top: 32px;
+  padding-top: 28px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.twofa-status-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 20px 0;
+}
+
+.twofa-status-label {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.twofa-status-badge {
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.twofa-enabled {
+  background: rgba(0, 255, 204, 0.12);
+  color: var(--miku-teal);
+  border: 1px solid rgba(0, 255, 204, 0.25);
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.1);
+}
+
+.twofa-disabled {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.twofa-disable-form {
+  margin-top: 12px;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ff2d55 0%, #d6006b 100%) !important;
+  box-shadow: 0 4px 20px rgba(255, 45, 85, 0.25) !important;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #ff4d6d 0%, #ff007f 100%) !important;
+  box-shadow: 0 6px 30px rgba(255, 45, 85, 0.4) !important;
+}
+
+/* 2FA Setup Page */
+.twofa-setup-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  margin: 24px 0;
+}
+
+.qr-code-container {
+  background: #fff;
+  padding: 16px;
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 0 30px rgba(0, 255, 204, 0.1), var(--shadow-main);
+}
+
+.qr-code-img {
+  display: block;
+  border-radius: 4px;
+}
+
+.secret-key-section {
+  text-align: center;
+}
+
+.secret-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.secret-key-display {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-sm);
+  padding: 12px 20px;
+  display: inline-block;
+}
+
+.secret-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--miku-teal);
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+  user-select: all;
+}
+
+/* TOTP Input */
+.totp-input {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Turnstile Widget */
+.turnstile-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 4px 0;
+}
+
+.turnstile-wrapper .cf-turnstile {
+  transform-origin: center;
+}

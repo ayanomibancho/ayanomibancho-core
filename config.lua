@@ -30,6 +30,14 @@ local config = {
     public = "./public",
     data = "./data",  -- Data directory (avatars, beatmaps, replays, wallpaper, welcome)
                       -- On Linux server: "/mnt/osu_data" (rclone mount ayanomibancho)
+  },
+
+  -- Cloudflare Turnstile Configuration (CAPTCHA)
+  -- Get keys from https://dash.cloudflare.com/?to=/:account/turnstile
+  -- Override these in config.local.lua with your actual keys
+  turnstile = {
+    site_key = "",    -- Public site key (used in HTML widget)
+    secret_key = "",  -- Private secret key (used for server-side verification)
   }
 }
 

@@ -1,0 +1,61 @@
+<!-- layout: layout -->
+
+<div class="edit-container container animate-fade-in">
+  <div class="edit-card glass">
+    <div class="edit-header">
+      <div class="edit-icon text-glow-teal">🔐</div>
+      <h1 class="edit-title">Setup Two-Factor Authentication</h1>
+      <p class="edit-subtitle">Scan the QR code below with your authenticator app (Google Authenticator, Authy, etc.) to link your account.</p>
+    </div>
+
+    <!-- Error Message Alert Box -->
+    <div class="error-wrapper" style="display: {{error_display}};">
+      <div class="error-card">
+        <div class="error-title">⚠️ ERROR</div>
+        <p class="error-text">{{error}}</p>
+      </div>
+    </div>
+
+    <!-- QR Code Section -->
+    <div class="twofa-setup-section">
+      <div class="qr-code-container">
+        <img src="{{qr_url}}" alt="2FA QR Code" class="qr-code-img" width="200" height="200">
+      </div>
+
+      <div class="secret-key-section">
+        <p class="secret-label">Or enter this key manually:</p>
+        <div class="secret-key-display">
+          <code class="secret-code">{{secret_display}}</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verification Form -->
+    <form class="auth-form" action="/home/account/2fa/enable" method="POST" autocomplete="off">
+      <input type="hidden" name="secret" value="{{secret_raw}}">
+      <div class="form-group">
+        <label for="totp_code">Verification Code</label>
+        <p class="form-hint">Enter the 6-digit code from your authenticator app to verify and activate 2FA.</p>
+        <input type="text" id="totp_code" class="form-control totp-input" name="totp_code" placeholder="000000" required autocomplete="off" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" style="text-align:center; font-size:1.8rem; letter-spacing:0.4em; font-family:'JetBrains Mono',monospace;">
+      </div>
+
+      <button type="submit" class="btn-save">Verify & Enable 2FA</button>
+    </form>
+
+    <div class="edit-footer-links">
+      <p><a href="/home/account/edit" class="edit-link text-glow-teal">← Back to Account Settings</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var input = document.getElementById('totp_code');
+  if (input) {
+    input.focus();
+    input.addEventListener('input', function() {
+      this.value = this.value.replace(/[^0-9]/g, '');
+    });
+  }
+})();
+</script>

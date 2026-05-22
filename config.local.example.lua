@@ -24,6 +24,12 @@ local local_config = {
   --   driver = "sqlite",
   --   sqlite_path = "ayanomibancho.db",
   -- }
+  -- Cloudflare Turnstile CAPTCHA keys
+  -- Get keys from: https://dash.cloudflare.com/?to=/:account/turnstile
+  -- turnstile = {
+  --   site_key = "0x4AAAAAAA...",
+  --   secret_key = "0x4AAAAAAA...",
+  -- },
 }
 
 return local_config

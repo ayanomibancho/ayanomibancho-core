@@ -1,0 +1,48 @@
+<!-- layout: layout -->
+
+<div class="auth-container container animate-fade-in">
+  <div class="auth-card glass">
+    <div class="auth-header">
+      <div class="auth-icon text-glow-teal">🔐</div>
+      <h1 class="auth-title">Two-Factor Verification</h1>
+      <p class="auth-subtitle">Enter the 6-digit code from your authenticator app to complete login.</p>
+    </div>
+
+    <!-- Error Message Alert Box -->
+    <div class="error-wrapper" style="display: {{error_display}};">
+      <div class="error-card">
+        <div class="error-title">⚠️ ERROR</div>
+        <p class="error-text">{{error}}</p>
+      </div>
+    </div>
+
+    <form class="auth-form" action="/login/2fa" method="POST" autocomplete="off">
+      <div class="form-group">
+        <label for="totp_code">Authenticator Code</label>
+        <input type="text" id="totp_code" class="form-control totp-input" name="totp_code" placeholder="000000" required autocomplete="off" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" style="text-align:center; font-size:2rem; letter-spacing:0.5em; font-family:'JetBrains Mono',monospace;">
+      </div>
+
+      <button type="submit" class="btn btn-auth">Verify & Sign In</button>
+    </form>
+
+    <div class="auth-footer-links">
+      <p><a href="/logout" class="auth-link text-glow-pink">Cancel and go back</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auto-focus and auto-submit when 6 digits are entered
+(function() {
+  var input = document.getElementById('totp_code');
+  if (input) {
+    input.focus();
+    input.addEventListener('input', function(e) {
+      this.value = this.value.replace(/[^0-9]/g, '');
+      if (this.value.length === 6) {
+        this.closest('form').submit();
+      }
+    });
+  }
+})();
+</script>

@@ -40,6 +40,31 @@
       <button type="submit" class="btn-save">Upload New Avatar</button>
     </form>
 
+    <!-- Two-Factor Authentication Section -->
+    <div class="twofa-section">
+      <h2 class="section-title-small">🔐 Two-Factor Authentication</h2>
+      <div class="twofa-status-row">
+        <span class="twofa-status-label">Status:</span>
+        <span class="twofa-status-badge twofa-{{twofa_badge_class}}">{{twofa_status}}</span>
+      </div>
+
+      <!-- Enable 2FA Button (shown when disabled) -->
+      <div style="display: {{twofa_btn_display_enable}};">
+        <a href="/home/account/2fa/setup" class="btn-save" style="display:inline-block; text-align:center; text-decoration:none;">Enable Two-Factor Authentication</a>
+      </div>
+
+      <!-- Disable 2FA Form (shown when enabled) -->
+      <div style="display: {{twofa_btn_display_disable}};">
+        <p class="form-hint">Enter your authenticator code to disable 2FA.</p>
+        <form class="auth-form twofa-disable-form" action="/home/account/2fa/disable" method="POST" autocomplete="off">
+          <div class="form-group">
+            <input type="text" id="disable_totp_code" class="form-control totp-input" name="totp_code" placeholder="000000" required autocomplete="off" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" style="text-align:center; font-size:1.4rem; letter-spacing:0.3em; font-family:'JetBrains Mono',monospace; max-width:220px;">
+          </div>
+          <button type="submit" class="btn-save btn-danger">Disable 2FA</button>
+        </form>
+      </div>
+    </div>
+
     <div class="edit-footer-links">
       <p>Want to view your public stats? <a href="/u/{{username}}" class="edit-link text-glow-teal">Go to Profile</a></p>
     </div>
@@ -52,4 +77,12 @@ document.getElementById('avatar').addEventListener('change', function(e) {
   var fileName = e.target.files[0] ? e.target.files[0].name : "or drag and drop PNG/JPG here";
   document.querySelector('.file-msg').innerText = fileName;
 });
+// Auto-filter non-numeric for disable totp input
+var disableInput = document.getElementById('disable_totp_code');
+if (disableInput) {
+  disableInput.addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+  });
+}
 </script>
+

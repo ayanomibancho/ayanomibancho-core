@@ -31,16 +31,7 @@ function handlers.team(req, res)
   -- Structure the team members with rich details
   local teamList = {
     developers = {
-      { username = "Ayanomi", role = "Lua & Backend Architect", github = "ayanomi", twitter = "ayanomi", mail = "ayanomi@ripple.moe" }
-    },
-    managers = {
-      { username = "Miku", role = "Head Community Manager", github = "miku", twitter = "miku_hatsune", mail = "miku@ripple.moe" }
-    },
-    moderators = {
-      { username = "Cookiezi", role = "Global Chat Moderator", github = "cookiezi" }
-    },
-    bats = {
-      { username = "peppy", role = "Mapping Quality Control", github = "peppy" }
+      { username = "Ayanomi", role = "Lua & Backend Architect", github = "ayanomi", twitter = "ayanomi", mail = "yuriyoumuhakirie@gmail.com" }
     }
   }
 
@@ -82,13 +73,13 @@ function handlers.team(req, res)
       if m.github or m.twitter or m.mail then
         local parts = {}
         if m.github then
-          table.insert(parts, string.format('<a href="https://github.com/akikohatsune" target="_blank" title="GitHub" class="social-icon">GitHub</a>', m.github))
+          table.insert(parts, string.format('<a href="https://github.com/%s" target="_blank" title="GitHub" class="social-icon">GitHub</a>', m.github))
         end
         if m.twitter then
-          table.insert(parts, string.format('<a href="https://twitter.com/akikohatsune" target="_blank" title="Twitter" class="social-icon">Twitter</a>', m.twitter))
+          table.insert(parts, string.format('<a href="https://twitter.com/%s" target="_blank" title="Twitter" class="social-icon">Twitter</a>', m.twitter))
         end
         if m.mail then
-          table.insert(parts, string.format('<a href="mailto:yuriyoumuhakirie@gmail.com" title="Email" class="social-icon">Email</a>', m.mail))
+          table.insert(parts, string.format('<a href="mailto:%s" title="Email" class="social-icon">Email</a>', m.mail))
         end
         socialHtml = '<div class="member-socials">' .. table.concat(parts, " &bull; ") .. '</div>'
       end

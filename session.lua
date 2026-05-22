@@ -39,12 +39,35 @@ function session.create(user)
 end
 
 -- Get user associated with the request (by checking cookies)
-function session.get(req)
-  local cookieHeader = req.headers and (req.headers.cookie or req.headers.Cookie)
+-- If allowPending is false/nil, sessions with pending_2fa are treated as not logged in
+function session.get(req, allowPending)
+  if not req.headers then return nil end
+
+  -- Luvit HTTP stores headers as array of {key, value} pairs
+  -- We need to search for the Cookie header in both formats
+  local cookieHeader = nil
+  if type(req.headers) == "table" then
+    -- Try array-of-pairs format first (Luvit native)
+    for _, pair in ipairs(req.headers) do
+      if type(pair) == "table" and pair[1] and pair[1]:lower() == "cookie" then
+        cookieHeader = pair[2]
+        break
+      end
+    end
+    -- Fallback: try dictionary-style access
+    if not cookieHeader then
+      cookieHeader = req.headers.cookie or req.headers.Cookie
+    end
+  end
+
   local cookies = parseCookies(cookieHeader)
   local sid = cookies.sid
   if not sid then return nil end
-  return sessionStore[sid], sid
+  local user = sessionStore[sid]
+  if user and user.pending_2fa and not allowPending then
+    return nil, sid
+  end
+  return user, sid
 end
 
 -- Destroy a session by session ID

@@ -37,6 +37,10 @@
         <input type="password" id="password_confirm" class="form-control" name="password_confirm" placeholder="Confirm your password" required autocomplete="off">
       </div>
 
+      <div class="turnstile-wrapper" style="display: {{turnstile_display}};">
+        <div class="cf-turnstile" data-sitekey="{{turnstile_site_key}}" data-theme="dark"></div>
+      </div>
+
       <button type="submit" class="btn btn-auth">Register</button>
     </form>
 
@@ -46,5 +50,4 @@
   </div>
 </div>
 
-
-
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
