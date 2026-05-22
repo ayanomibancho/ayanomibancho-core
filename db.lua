@@ -123,8 +123,6 @@ local function sqliteQuery(sqlStr, params)
     return {}
   end
 
-  local isSelect = string.find(sqlStr:lower(), "^%s*select") ~= nil
-
   local success, stmt = pcall(function() return db.sqliteConn:prepare(sqlStr) end)
   if not success or not stmt then
     print("[DB SQLite Error] Prepare failed for: " .. tostring(sqlStr) .. " | Error: " .. tostring(stmt))
@@ -139,6 +137,8 @@ local function sqliteQuery(sqlStr, params)
       return {}
     end
   end
+
+  local isSelect = stmt:_ncol() > 0
 
   if isSelect then
     local rows = {}

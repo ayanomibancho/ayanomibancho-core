@@ -10,6 +10,36 @@ local openssl = require('openssl')
 
 local auth = {}
 
+local loginFailures = {}
+local gcCounter = 0
+
+local function getHeader(req, name)
+  if not req.headers then return nil end
+  return req.headers[name:lower()] or req.headers[name]
+end
+
+local function getClientIp(req)
+  local xff = getHeader(req, 'x-forwarded-for')
+  if xff and xff ~= "" then
+    local ip = string.match(xff, "^%s*([^,%s]+)")
+    if ip then return ip end
+  end
+
+  local xri = getHeader(req, 'x-real-ip')
+  if xri and xri ~= "" then
+    return xri
+  end
+
+  if req.socket and req.socket.address then
+    local ok, addr = pcall(req.socket.address, req.socket)
+    if ok and addr and addr.ip then
+      return addr.ip
+    end
+  end
+
+  return "127.0.0.1"
+end
+
 -- Helper to read POST request body asynchronously
 local function readBody(req)
   local co = coroutine.running()
@@ -175,6 +205,44 @@ function auth.loginSubmit(req, res)
     return
   end
 
+  local ip = getClientIp(req)
+  local now = os.time()
+
+  -- Inline Garbage Collection for loginFailures
+  gcCounter = gcCounter + 1
+  if gcCounter % 50 == 0 then
+    for k, v in pairs(loginFailures) do
+      if v.blockedUntil and now >= v.blockedUntil then
+        loginFailures[k] = nil
+      elseif not v.blockedUntil and now - v.lastAttempt > 300 then
+        loginFailures[k] = nil
+      end
+    end
+  end
+
+  local failRecord = loginFailures[ip]
+  if failRecord then
+    if failRecord.blockedUntil and now < failRecord.blockedUntil then
+      local remaining = math.max(0, math.ceil(failRecord.blockedUntil - now))
+      local minutes = math.ceil(remaining / 60)
+      local dataContext = {
+        title = "Login",
+        error = string.format("Too many failed login attempts. Please wait %d minute(s) before trying again.", minutes),
+        error_display = "block"
+      }
+      local success, renderedHtml = pcall(template.render, "login", dataContext)
+      res:writeHead(200, {
+        ['Content-Type'] = 'text/html; charset=utf-8',
+        ['Content-Length'] = success and tostring(#renderedHtml) or 24
+      })
+      res:finish(success and renderedHtml or "Internal rendering error")
+      return
+    elseif failRecord.blockedUntil and now >= failRecord.blockedUntil then
+      loginFailures[ip] = nil
+      failRecord = nil
+    end
+  end
+
   local body = readBody(req)
   local params = querystring.parse(body)
   local username = params.username or ""
@@ -193,6 +261,7 @@ function auth.loginSubmit(req, res)
   end
 
   if user then
+    loginFailures[ip] = nil
     local sid = session.create(user)
     res:writeHead(302, {
       ['Location'] = '/',
@@ -200,17 +269,40 @@ function auth.loginSubmit(req, res)
     })
     res:finish()
   else
-    local dataContext = {
-      title = "Login",
-      error = "Invalid username/email or password.",
-      error_display = "block"
-    }
-    local success, renderedHtml = pcall(template.render, "login", dataContext)
-    res:writeHead(200, {
-      ['Content-Type'] = 'text/html; charset=utf-8',
-      ['Content-Length'] = success and tostring(#renderedHtml) or 24
-    })
-    res:finish(success and renderedHtml or "Internal rendering error")
+    failRecord = loginFailures[ip]
+    if not failRecord then
+      failRecord = { count = 0, lastAttempt = now }
+      loginFailures[ip] = failRecord
+    end
+    failRecord.count = failRecord.count + 1
+    failRecord.lastAttempt = now
+
+    if failRecord.count >= 5 then
+      failRecord.blockedUntil = now + 300
+      local dataContext = {
+        title = "Login",
+        error = "Too many failed login attempts. Please try again in 5 minutes.",
+        error_display = "block"
+      }
+      local success, renderedHtml = pcall(template.render, "login", dataContext)
+      res:writeHead(200, {
+        ['Content-Type'] = 'text/html; charset=utf-8',
+        ['Content-Length'] = success and tostring(#renderedHtml) or 24
+      })
+      res:finish(success and renderedHtml or "Internal rendering error")
+    else
+      local dataContext = {
+        title = "Login",
+        error = "Invalid username/email or password.",
+        error_display = "block"
+      }
+      local success, renderedHtml = pcall(template.render, "login", dataContext)
+      res:writeHead(200, {
+        ['Content-Type'] = 'text/html; charset=utf-8',
+        ['Content-Length'] = success and tostring(#renderedHtml) or 24
+      })
+      res:finish(success and renderedHtml or "Internal rendering error")
+    end
   end
 end
 
@@ -241,7 +333,7 @@ function auth.registerClient(req, res)
 
   -- Try to get boundary from Content-Type header
   local contentType = req.headers['content-type'] or ""
-  boundary = contentType:match("boundary=%-*(.+)")
+  boundary = contentType:match('boundary="?([^";%s]+)"?')
 
   if not boundary then
     -- Detect boundary from the first line of the body
@@ -435,7 +527,7 @@ function auth.editSubmit(req, res)
 
   local body = readBody(req)
   local contentType = req.headers['content-type'] or ""
-  local boundary = contentType:match("boundary=%-*(.+)")
+  local boundary = contentType:match('boundary="?([^";%s]+)"?')
   
   local fileData, err, ext = parseAvatarUpload(body, boundary)
   

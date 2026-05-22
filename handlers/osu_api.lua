@@ -179,8 +179,22 @@ local function decryptScore(scoreB64, hashB64, ivB64, osuVersion)
   local childprocess = require('childprocess')
   local co = coroutine.running()
   
+  -- Input validation to prevent command injection
+  if not string.match(scoreB64 or "", "^[a-zA-Z0-9+/=%s\r\n]+$") then
+    return nil, "Invalid score base64 parameter"
+  end
+  if hashB64 and not string.match(hashB64, "^[a-zA-Z0-9+/=%s\r\n]+$") then
+    return nil, "Invalid hash base64 parameter"
+  end
+  if not string.match(ivB64 or "", "^[a-zA-Z0-9+/=%s\r\n]+$") then
+    return nil, "Invalid IV base64 parameter"
+  end
+  if not string.match(osuVersion or "", "^[a-zA-Z0-9%.-]+$") then
+    return nil, "Invalid osu version parameter"
+  end
+
   -- Use double quotes for arguments to handle potential special characters in shell
-  local cmd = string.format('python decrypt_score.py "%s" "%s" "%s" "%s"', scoreB64, hashB64, ivB64, osuVersion)
+  local cmd = string.format('python decrypt_score.py "%s" "%s" "%s" "%s"', scoreB64, hashB64 or "", ivB64, osuVersion)
   
   childprocess.exec(cmd, {}, function(err, stdout, stderr)
     if err then
