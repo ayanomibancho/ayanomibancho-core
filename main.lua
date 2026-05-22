@@ -29,8 +29,30 @@ local handleBancho = require('./handlers/bancho')
 -- 3. Register HTTP Routes
 -- GET: Home Page
 router:get('^/$', function(req, res)
+  local userCount = 0
+  local scoreCount = 0
+  
+  -- Query counts from DB
+  local stats = db.query("SELECT (SELECT COUNT(*) FROM users) as u_count, (SELECT COUNT(*) FROM scores) as s_count")
+  if stats and stats[1] then
+    userCount = stats[1].u_count or 0
+    scoreCount = stats[1].s_count or 0
+  end
+
+  local function formatNumber(num)
+    local formatted = tostring(num or 0)
+    while true do
+      local k
+      formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+      if k == 0 then break end
+    end
+    return formatted
+  end
+
   local dataContext = {
     title = "Home",
+    total_users = formatNumber(userCount),
+    total_scores = formatNumber(scoreCount)
   }
   local success, renderedHtml = pcall(template.render, "home", dataContext)
   if success then

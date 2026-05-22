@@ -2,17 +2,30 @@
 
 <div class="profile-header container animate-fade-in">
   <div class="profile-card glass">
-    <!-- User Badge -->
+    <!-- Premium Cover Banner -->
+    <div class="profile-cover"></div>
+
+    <!-- User Main Badge Overlap -->
     <div class="user-main-info">
       <div class="avatar-container">
-        <div class="avatar-ring animate-pulse"></div>
-        <img class="user-avatar" src="https://a.o.ayanomi.io.vn/{{user.id}}" onerror="this.onerror=null;this.src='/public/avatar.jpg';" alt="Avatar">
+        <div class="avatar-ring"></div>
+        <img class="user-avatar" src="/{{user.id}}" onerror="this.onerror=null;this.src='/public/avatar.jpg';" alt="Avatar">
       </div>
       <div class="user-details">
         <h1 class="user-name">{{user.username}}</h1>
         <div class="user-badges">
           <span class="badge badge-rank">#{{user_rank}}</span>
           <span class="badge badge-country">{{user.country}}</span>
+        </div>
+        <!-- Level Progress Bar -->
+        <div class="level-info-wrapper">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--text-secondary);">
+            <span>Level 100</span>
+            <span>75%</span>
+          </div>
+          <div class="level-progress-bar">
+            <div class="level-progress-fill" style="width: 75%;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -119,196 +132,6 @@
     </table>
   </div>
 </div>
-
-<style>
-.profile-card {
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  margin-bottom: 24px;
-}
-
-.user-main-info {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.avatar-container {
-  position: relative;
-  width: 96px;
-  height: 96px;
-}
-
-.user-avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid rgba(255, 255, 255, 0.05);
-  position: relative;
-  z-index: 2;
-}
-
-.avatar-ring {
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  width: 104px;
-  height: 104px;
-  border-radius: 50%;
-  border: 2px solid var(--miku-teal);
-  box-shadow: 0 0 15px var(--miku-teal-glow);
-  z-index: 1;
-}
-
-.user-details {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.user-name {
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-
-.user-badges {
-  display: flex;
-  gap: 12px;
-}
-
-.badge {
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.badge-rank {
-  background: var(--miku-teal-glow);
-  color: var(--miku-teal);
-  border: 1px solid rgba(57, 197, 187, 0.3);
-}
-
-.badge-country {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
-}
-
-.stat-box {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  padding: 20px;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  transition: var(--transition-smooth);
-}
-
-.stat-box:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.stat-label {
-  font-size: 13px;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 800;
-}
-
-.section-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.section-title {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.section-line {
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, var(--glass-border) 0%, rgba(255,255,255,0) 100%);
-}
-
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
-}
-
-.details-card {
-  padding: 24px;
-}
-
-.card-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding-bottom: 8px;
-  color: var(--text-primary);
-}
-
-.details-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.details-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-}
-
-.details-label {
-  color: var(--text-secondary);
-}
-
-.details-val {
-  font-weight: 600;
-}
-
-.status-indicator {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 6px;
-}
-
-.status-online {
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-}
-
-.profile-scores-section {
-  margin-top: 36px;
-}
-</style>
 
 <script>
   // Add active class based on URL parameters

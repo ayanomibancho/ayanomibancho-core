@@ -96,7 +96,7 @@ function handlers.team(req, res)
       local item = string.format([[
         <div class="team-card glass card-hover">
           <div class="team-avatar-container">
-            <img class="team-avatar" src="https://a.ppy.sh/%d" onerror="this.onerror=null;this.src='/public/avatar.jpg';" alt="%s">
+            <img class="team-avatar" src="/%d" onerror="this.onerror=null;this.src='/public/avatar.jpg';" alt="%s">
           </div>
           <div class="team-info">
             <h3 class="team-username"><a href="/u/%s">%s</a> <span class="flag-icon">%s</span></h3>

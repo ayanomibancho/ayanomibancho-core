@@ -39,52 +39,101 @@ local function handleLeaderboard(req, res)
   
   local players = db.query(query)
   
-  -- Build HTML table rows dynamically
+  -- Build HTML table rows and Podium HTML
+  local podiumCards = {}
   local rows = {}
+  
   for i, u in ipairs(players) do
-    local rankBadge = ""
-    if i == 1 then
-      rankBadge = '<span class="rank-badge rank-1">#1</span>'
-    elseif i == 2 then
-      rankBadge = '<span class="rank-badge rank-2">#2</span>'
-    elseif i == 3 then
-      rankBadge = '<span class="rank-badge rank-3">#3</span>'
+    if i <= 3 then
+      -- Render Podium card
+      local crown = ""
+      local badgeClass = ""
+      local cardClass = ""
+      if i == 1 then
+        crown = '<div class="podium-crown">👑</div>'
+        badgeClass = "badge-podium-1"
+        cardClass = "rank-1-card"
+      elseif i == 2 then
+        badgeClass = "badge-podium-2"
+        cardClass = "rank-2-card"
+      elseif i == 3 then
+        badgeClass = "badge-podium-3"
+        cardClass = "rank-3-card"
+      end
+      
+      local card = string.format([[
+        <div class="podium-card %s glass">
+          %s
+          <div class="podium-badge %s">Rank #%d</div>
+          <div class="podium-avatar-wrapper">
+            <div class="podium-avatar-ring"></div>
+            <img class="podium-avatar" src="/%s" onerror="this.onerror=null;this.src='/public/avatar.jpg';" alt="Avatar">
+          </div>
+          <a href="/u/%s" class="podium-username">%s</a>
+          <div class="podium-country">%s</div>
+          <div class="podium-score text-glow-teal">%s</div>
+          <div class="podium-label">Ranked Score</div>
+          <div class="podium-sub-stats">
+            <div class="podium-sub-item">
+              <span class="podium-sub-val text-glow-pink">%.2f%%</span>
+              <span class="podium-sub-lbl">Acc</span>
+            </div>
+            <div class="podium-sub-item">
+              <span class="podium-sub-val">%s</span>
+              <span class="podium-sub-lbl">Plays</span>
+            </div>
+          </div>
+        </div>
+      ]], cardClass, crown, badgeClass, i, tostring(u.id or ""), u.username or "Guest", u.username or "Guest", u.country or "XX", formatNumber(u.score or 0), u.accuracy or 0, formatNumber(u.playcount or 0))
+      
+      table.insert(podiumCards, card)
     else
-      rankBadge = string.format('<span class="rank-badge rank-other">#%d</span>', i)
-    end
-
-    local row = string.format([[
-          <tr class="table-row-hover">
-            <td class="col-rank">
-              %s
-            </td>
-            <td class="col-user">
-              <div class="table-user-info">
-                <img class="table-avatar" src="https://a.o.ayanomi.io.vn/%s" onerror="this.onerror=null;this.src='/public/avatar.jpg';" alt="Avatar">
-                <div class="table-user-details">
-                  <a href="/u/%s" class="table-username">%s</a>
-                  <span class="table-country-code">%s</span>
+      -- Render Table Row for rank 4+
+      local rankBadge = string.format('<span class="rank-badge rank-other">#%d</span>', i)
+      local row = string.format([[
+            <tr class="table-row-hover">
+              <td class="col-rank" style="text-align: center;">
+                %s
+              </td>
+              <td class="col-user">
+                <div class="table-user-info">
+                  <img class="table-avatar" src="/%s" onerror="this.onerror=null;this.src='/public/avatar.jpg';" alt="Avatar">
+                  <div class="table-user-details">
+                    <a href="/u/%s" class="table-username">%s</a>
+                    <span class="table-country-code">%s</span>
+                  </div>
                 </div>
-              </div>
-            </td>
-            <td class="col-pp text-glow-teal font-bold">%s</td>
-            <td class="col-accuracy text-glow-pink">%.2f%%</td>
-            <td class="col-playcount">%s</td>
-            <td class="col-level">
-              <div class="level-indicator">
-                <span class="level-number">Lv.100</span>
-              </div>
-            </td>
-          </tr>
-    ]], rankBadge, tostring(u.id or ""), u.username or "Guest", u.username or "Guest", u.country or "XX", formatNumber(u.score or 0), u.accuracy or 0, formatNumber(u.playcount or 0))
-    table.insert(rows, row)
+              </td>
+              <td class="col-pp text-glow-teal font-bold">%s</td>
+              <td class="col-accuracy text-glow-pink">%.2f%%</td>
+              <td class="col-playcount">%s</td>
+              <td class="col-level">
+                <div class="level-indicator">
+                  <span class="level-number">Lv.100</span>
+                </div>
+              </td>
+            </tr>
+      ]], rankBadge, tostring(u.id or ""), u.username or "Guest", u.username or "Guest", u.country or "XX", formatNumber(u.score or 0), u.accuracy or 0, formatNumber(u.playcount or 0))
+      
+      table.insert(rows, row)
+    end
   end
-
+  
+  local topPodiumHtml = ""
+  if #podiumCards > 0 then
+    topPodiumHtml = '<div class="podium-container animate-fade-in">' .. table.concat(podiumCards, "\n") .. '</div>'
+  end
+  
+  if #rows == 0 and #podiumCards == 0 then
+    table.insert(rows, '<tr><td colspan="6" style="text-align: center; padding: 30px;">No players found for this mode.</td></tr>')
+  end
+  
   local leaderboardRowsHtml = table.concat(rows, "\n")
   
   -- Render the leaderboard page
   local dataContext = {
     title = "Leaderboard",
+    top_podium_html = topPodiumHtml,
     leaderboard_rows = leaderboardRowsHtml,
     mode = modeSuffix,
     relax_text = isRelax == 1 and "(Relax)" or ""
