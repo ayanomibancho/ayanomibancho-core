@@ -295,7 +295,7 @@ router:get('^/(%d+)$', function(req, res, captures)
         res:writeHead(200, {
           ['Content-Type'] = 'image/jpeg',
           ['Content-Length'] = tostring(#data),
-          ['Cache-Control'] = 'public, max-age=300'
+          ['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         })
         res:finish(data)
       else
@@ -311,7 +311,7 @@ router:get('^/(%d+)$', function(req, res, captures)
       res:writeHead(200, {
         ['Content-Type'] = 'image/png',
         ['Content-Length'] = tostring(#data),
-        ['Cache-Control'] = 'public, max-age=300'
+        ['Cache-Control'] = 'no-cache, no-store, must-revalidate'
       })
       res:finish(data)
     else
@@ -320,7 +320,7 @@ router:get('^/(%d+)$', function(req, res, captures)
           res:writeHead(200, {
             ['Content-Type'] = 'image/jpeg',
             ['Content-Length'] = tostring(#data2),
-            ['Cache-Control'] = 'public, max-age=300'
+            ['Cache-Control'] = 'no-cache, no-store, must-revalidate'
           })
           res:finish(data2)
         else
