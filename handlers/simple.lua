@@ -31,7 +31,7 @@ function handlers.team(req, res)
   -- Structure the team members with rich details
   local teamList = {
     developers = {
-      { username = "Ayanomi", role = "Lua & Backend Architect", github = "ayanomi", twitter = "ayanomi", mail = "yuriyoumuhakirie@gmail.com" }
+      { username = "Ayanomi", role = "Lua & Backend Architect", github = "akikohatsune", twitter = "akikohatsune", mail = "yuriyoumuhakirie@gmail.com" }
     }
   }
 
